@@ -1,10 +1,10 @@
+import os
 import socket
 import io
 import sys
 from datetime import datetime
 
 class Server():
-
     def __init__(self,server_address):
         # Since  we are using IPv4 address only server_address will be 2-tuple
         # (host,port)
@@ -42,16 +42,23 @@ class Server():
             self.client_socket,client_address = self.listen_socket.accept()
             # fork() to create a new process, this allows handling multiple requests
             # at the same time
-            self.handle_request(self.client_socket);
+            pid = os.fork()
+            if pid == 0:
+                self.listen_socket.close()
+                self.handle_request(self.client_socket)
+                self.client_socket.close()
+                os._exit(0)
+            else:
+                self.client_socket.close()
 
     def handle_request(self,client_socket):
         request_content = client_socket.recv(2048)
         request_content = request_content.decode('utf-8')
 
         # start debug segment
-        for line in request_content.splitlines():
-            print(line)
-        print('\n')
+        #for line in request_content.splitlines():
+            #print(line)
+        #print('\n')
         # end debug segment
 
         # Getting components of request line
@@ -105,9 +112,9 @@ class Server():
             response += data.decode('utf-8')
             
         # start debug segment
-        for line in response.splitlines():
-            print(line)
-        print('\n')
+        #for line in response.splitlines():
+            #print(line)
+        #print('\n')
         # end debug segment
 
         # Sending response to client and closing the connection
